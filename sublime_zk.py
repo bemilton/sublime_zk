@@ -822,7 +822,7 @@ class ExternalSearch:
     def externalize_note_links(ag_out, folder, extension, prefix=None):
         """
         If enabled, write ag file name output into external search results file
-        in `[[note_id]] note title` style.
+        in `[[note_id note title]]` or `[[note_id]] note title` style.
         """
         if ExternalSearch.EXTERNALIZE:
             link_prefix, link_postfix = get_link_pre_postfix()
@@ -851,8 +851,13 @@ class ExternalSearch:
                     column = 1
                 results.sort(key=itemgetter(column))
                 for note_id, title in results:
-                    f.write(u'* {}{}{} {}\n'.format(link_prefix, note_id,
-                                                    link_postfix, title))
+                    if note_id.lower() != 'index':
+                        if get_settings().get('move_title_inside_brackets', False):
+                            f.write(u'* {}{} {}{}\n'.format(link_prefix, note_id,
+                                                            title, link_postfix))
+                        else:
+                            f.write(u'* {}{}{} {}\n'.format(link_prefix, note_id,
+                                                            link_postfix, title))
 
     @staticmethod
     def external_file(folder):
@@ -964,8 +969,12 @@ class TextProduction:
         else:
             filename = os.path.basename(note_file).replace(extension, '')
             filename = filename.split(' ', 1)[1]
-            header = link_prefix + note_id + link_postfix + ' ' + filename
+            if get_settings().get('move_title_inside_brackets', False):
+                header = link_prefix + note_id + ' ' + filename + link_postfix
+            else:
+                header = link_prefix + note_id + link_prefix + ' ' + filename
             header = '<!-- !    ' + header + '    -->'
+            #footer = '<!-- (End of note ' + note_id + ' ' + filename + link_postfix + ') -->'
             result_lines.append(header)
             result_lines.extend(content.split('\n'))
             result_lines.append(footer)
@@ -1143,6 +1152,10 @@ def create_note(filn, title, origin_id=None, origin_title=None, body=None):
         # don't break legacy
         'origin': origin_id,
     }
+    # Don't want 'None' string to be in new zettels.
+    for k,v in params.copy().items():
+        if isinstance(v, type(None)):
+            params[k] = ''
     settings = get_settings()
     format_str = settings.get('new_note_template')
     if not format_str:
@@ -1930,10 +1943,17 @@ class ZkNewZettelCommand(sublime_plugin.WindowCommand):
 
         if self.insert_link:
             prefix, postfix = get_link_pre_postfix()
-            link_txt = prefix + new_id + postfix
-            do_insert_title = settings.get('insert_links_with_titles', False)
-            if do_insert_title:
-                link_txt += ' ' + input_text
+            if settings.get('insert_links_with_titles', False) == False:
+                link_txt = prefix + new_id + postfix
+            elif settings.get('insert_links_with_titles') == True and \
+                    settings.get('move_title_inside_brackets', False) == False:
+                link_txt = prefix + new_id + postfix + ' ' + input_text
+            else: # (insert_links_with_titles && move_title_inside_brackets) == True
+                link_txt = prefix + new_id + ' ' + input_text + postfix
+            #do_insert_title = settings.get('insert_links_with_titles', False)
+            #if do_insert_title:
+                #link_txt += ' ' + input_text
+            #    pass
             view = self.window.active_view()
             view.run_command('zk_replace_selected_text', {
                              'args': {'text': link_txt}})
@@ -1958,11 +1978,15 @@ class ZkGetWikiLinkCommand(sublime_plugin.TextCommand):
         settings = get_settings()
         prefix, postfix = get_link_pre_postfix()
         note_id, title = self.modified_files[selection].split(' ', 1)
-        link_txt = prefix + note_id + postfix
+        #link_txt = prefix + note_id + postfix
+        link_txt = prefix + note_id
         do_insert_title = settings.get('insert_links_with_titles', False)
-        if do_insert_title:
-            link_txt += ' ' + title
-
+        if do_insert_title and settings.get('move_title_inside_brackets', False) == False:
+            link_txt += postfix + ' ' + title
+        elif do_insert_title and settings.get('move_title_inside_brackets') == True:
+            link_txt += ' ' + title + postfix
+        else: # insert_links_with_titles == False (so move_title_inside_brackets is irrelevant)
+            link_txt += postfix
         self.view.run_command(
             'zk_insert_wiki_link', {'args': {'text': link_txt}})
 

@@ -235,6 +235,15 @@ Examples how inserted links might look like depending on this setting:
 [[199901012359]]
 ```
 
+But what if you want to move the title _inside_ the brackets?
+Then you should set `"move_title_inside_brackets"` to `true`. This will create links like:
+
+```markdown
+`move_title_inside_brackets` is `true`:
+[[199901012359 and note title]]
+```
+
+
 ### IDs in titles of new notes
 When you create a new note, its title will automatically be inserted and an ID will be assigned to it (see [Creating a new note](#creating-a-new-note)). If you want the ID to be part of the title, change the setting `id_in_title` from `false` to `true`.
 

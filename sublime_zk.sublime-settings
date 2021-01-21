@@ -22,6 +22,8 @@
 
     // links like "[[199901012359]] and note title" instead of "[[199901012359]]"
     "insert_links_with_titles": false,
+    // and move the title inside the brackets?
+    "move_title_inside_brackets": false,
 
     // when creating a new note, put id into title?
      // false to disable
