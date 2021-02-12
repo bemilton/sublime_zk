@@ -1,4 +1,8 @@
 {
+    // Toggle whether find_all_tags_in_archive command
+    // displays the tag count and orders by most common
+    "insert_tag_count": false,
+
     // Specify CSL style for the bibliography generation.
     "csl_style": "",
 

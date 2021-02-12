@@ -55,7 +55,7 @@ class ZkConstants:
 
     # match note links in text
     Link_Matcher = re.compile('(\[+|§)([0-9.]{12,18})(\]+|.?)')
-    # Above RE doesn't really care about closing ] andymore
+    # Above RE doesn't really care about closing ] anymore
     # This works in our favour so we support [[201711122259 This is a note]]
     # when expanding overview notes
 
@@ -678,7 +678,6 @@ class Autobib:
         # make me windows-safe
         stdout = stdout.decode('utf-8', errors='ignore').replace('\r', '')
         stderr = stderr.decode('utf-8', errors='ignore').replace('\r', '')
-        # print('pandoc says:', stderr)
         return stdout
 
 
@@ -696,17 +695,26 @@ class ExternalSearch:
         """
         output = ExternalSearch.search_in(folder, ZkConstants.RE_TAGS(),
                                           extension, tags=True)
-        tags = set()
+        #tags = set()
+        tags = dict()
+        settings = get_settings()
         for line in output.split('\n'):
             if line:
-                tags.add(line)
+                if line in tags.keys():
+                    tags[line] = tags[line]+1
+                else:
+                    tags.update({line: 1})
         if ExternalSearch.EXTERNALIZE:
             with open(ExternalSearch.external_file(folder), mode='w',
                       encoding='utf-8') as f:
                 f.write('# All Tags\n\n')
-                for tag in sorted(tags):
-                    f.write(u'* {}\n'.format(tag))
-        return list(tags)
+                for tag in sorted([(k,v) for k,v in tags.items()],
+                        key=lambda count: count[1], reverse=True):
+                    if settings.get('insert_tag_count') == True:
+                        f.write(u'* {} {}\n'.format(tag[1], tag[0]))
+                    else:
+                        f.write(u'* {}\n'.format(tag[0]))
+        return list(tags.keys())
 
     @staticmethod
     def notes_and_tags_in(folder, extension):
@@ -2064,7 +2072,6 @@ class ZkShowAllTagsCommand(sublime_plugin.WindowCommand):
         tags = find_all_tags_in(folder, extension)
         tags.sort()
         lines = '# All Tags\n'
-        print(lines)
         lines += '\n'.join(['* ' + tag for tag in tags])
         print(lines)
 

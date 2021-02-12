@@ -837,6 +837,8 @@ When you press `[#][!]` (that is the `#` key followed by the `!` key) quickly, a
 ![taglist](https://user-images.githubusercontent.com/30892199/32422037-fd32b18e-c29d-11e7-85d0-2d008b07fe1d.png)
 
 **Note:** If you don't like splitting your window, set the parameter `show_all_tags_in_new_pane` to `false`.
+**Note #2:** If you want to order your tags by most common next to a count of how many times the tag has been used, then set the `insert_tag_count` setting to `true` in either the _default_- or _user_-specific config file.
+
 
 Of course, if you have `ag` installed, the permanent search file will be used to display all your tags:
 
